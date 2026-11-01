@@ -1,0 +1,10 @@
+project:
+  scratch_dir: "/path/to/scratch"
+
+evaluation:
+  num_classes: 7
+  batch_size:  64
+  num_workers: 4
+
+data:
+  validation_dir: "${project.scratch_dir}/datasets/main/real/split/Real_Validation"

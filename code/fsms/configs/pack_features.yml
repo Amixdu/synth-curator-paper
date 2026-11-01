@@ -1,0 +1,32 @@
+# ============================================================
+# Pack raw feature dicts into contiguous matrices.
+#
+# INPUTS  : the three raw .pt files gathered in ${asset_dir}
+# OUTPUTS : packed matrices in ${packed_dir}
+#
+# Reads only. Never moves or deletes a source file.
+#
+# Packing does two things:
+#   1. Strips the 257x storage bloat from real_test_features.pt.
+#   2. Replaces 275k individual tensor objects with one contiguous matrix, cutting
+#      load time ~12x and peak RAM for the pool audit from ~4.4 GB to ~3.2 GB.
+#
+# packed_dir should point at a fast local disk. These files are a regenerable
+# cache that validate.py and calibrate_threshold.py read repeatedly (about 860 MB per read).
+# ============================================================
+asset_dir:  "/path/to/fsms_assets"
+packed_dir: "work/fsms/packed"
+
+pack:
+  - input:  "${asset_dir}/real_train_features.pt"
+    output: "${packed_dir}/real_train_matrix.pt"      # 8,012 x 768  -> ~25 MB
+
+  - input:  "${asset_dir}/real_test_features.pt"
+    output: "${packed_dir}/real_test_matrix.pt"       # 1,512 x 768  -> ~5 MB
+                                                      # (input is ~1.19 GB)
+
+  - input:  "${asset_dir}/synthetic_pool_features.pt"
+    output: "${packed_dir}/synth_pool_matrix.pt"      # 275,472 x 768 -> ~860 MB
+
+# Missing inputs are skipped with a warning rather than failing, so this is safe to
+# run before every asset is in place. Rerun once the rest arrive.

@@ -1,0 +1,16 @@
+# Safety sweep: FSMS for the tau = 0.90, 0.93 and 0.99 legs (Swin-B).
+scratch_dir: "/path/to/scratch"
+
+real_train_features: "${scratch_dir}/features/real_train_features.pt"
+synth_pool_features: "${scratch_dir}/features/synthetic_pool_features.pt"
+
+curated_dirs:
+  per_arch:
+    algorithm_safety090:
+      swin_b: "${scratch_dir}/benchmark/algorithm_safety090/swin_b"
+    algorithm_safety093:
+      swin_b: "${scratch_dir}/benchmark/algorithm_safety093/swin_b"
+    algorithm_safety099:
+      swin_b: "${scratch_dir}/benchmark/algorithm_safety099/swin_b"
+
+output_fsms: "${scratch_dir}/benchmark/safety_sweep/fsms_lookup.csv"

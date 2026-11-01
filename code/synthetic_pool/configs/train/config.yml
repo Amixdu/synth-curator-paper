@@ -1,0 +1,117 @@
+# ===================================================================
+# EDM2 Training Configuration (Latent Diffusion)
+# ===================================================================
+
+# -------------------------------------------------------------------
+# Project root directories
+# -------------------------------------------------------------------
+project_roots:
+  code_dir: "/path/to/code"
+  scratch_dir: "/path/to/scratch"
+  datasets_dir: "/path/to/scratch/datasets/main"
+
+# -------------------------------------------------------------------
+# Script Paths
+# -------------------------------------------------------------------
+scripts:
+  image_generation:
+    edm:
+      preprocessing:
+        preprocess_script:
+          dir: "${project_roots.code_dir}/synthetic_pool/edm2"
+          file: "preprocess_edm.py"
+        dataset_tool_script:
+          dir: "${project_roots.code_dir}/synthetic_pool/edm2"
+          file: "dataset_tool.py"
+      training:
+        launcher:
+          dir: "${project_roots.code_dir}/synthetic_pool/edm2"
+          file: "launcher.py"
+
+# -------------------------------------------------------------------
+# Data Paths
+# -------------------------------------------------------------------
+data:
+  source_real:
+    split:
+      # The full training split.
+      train: "${project_roots.datasets_dir}/real/split/Real_Train"
+
+# -------------------------------------------------------------------
+# Image Generation Pipeline
+# -------------------------------------------------------------------
+image_generation:
+  edm:
+    paths:
+      # --- DUAL DATASETS ---
+      # 1. RGB Data: Used for Metrics later (saved for scientific consistency)
+      dataset_rgb_zip: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/processed_training_input/edm2_isic_rgb_512.zip"
+      
+      # 2. Latent Data: The actual input for the Neural Network
+      dataset_latent_zip: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/processed_training_input/edm2_isic_latents_512.zip"
+      
+      # Location for all training outputs (checkpoints, logs)
+      output_dir: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/training_output"
+      
+      # Location for VAE Safety Audit images
+      vae_audit_dir: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/logs/vae_safety_audit"
+      
+      # Path to resume training from (Null for first run)
+      resume_pt_path: null
+    
+    preprocessing:
+      # Ephemeral staging folder
+      train_data_source_dir: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/training_input"
+      resolution: "512x512"
+      
+      # Audit settings
+      vae_audit_samples: 10000
+      ssim_threshold: 0.80
+
+    training_params:
+      # --- Hardware ---
+      # Total number of GPUs to request.
+      gpus: 3
+
+      # --- Duration & Logging ---
+      # Total training duration in thousands of images (kimg).
+      # CRITICAL: Must be set to 25014 to ensure divisibility by batch_size (2112).
+      # Math: (25014 * 1024) / 2112 = 12,128.0 (Perfect Integer)
+      duration_kimg: 25014
+      
+      # How often to save a lightweight network snapshot (.pkl file), measured in ticks.
+      # 30 ticks * 33 kimg/tick = 990 kimg per snapshot. (Approx 1000 kimg).
+      snap_frequency: 30
+      
+      # How often to save a full training state dump (.pt file), measured in ticks.
+      # 30 ticks * 33 kimg/tick = 990 kimg per dump. (Approx 1000 kimg).
+      dump_frequency: 30
+      
+      # Define the duration of one 'tick' in kimg.
+      # CRITICAL: Must be 33 to satisfy the 3-GPU batch alignment.
+      # Math: (33 * 1024) / 2112 = 16.0 (Perfect Integer).
+      tick_duration: 33
+
+      # --- Batch Settings ---
+      # Total batch size distributed across all GPUs.
+      # EDM2 requires large batches for stability. 2112 is optimal for 3 GPUs.
+      # Divisibility Check: 2112 / (3 GPUs * 32 batch_gpu) = 22 (divisible).
+      batch_size: 2112
+      
+      # Batch size per individual GPU (Physical VRAM limit).
+      # The code automatically uses gradient accumulation to reach the total batch_size.
+      batch_gpu: 32
+      
+      # --- Model Architecture ---
+      # 's' = Small Architecture (approx 55M params), optimal for 10k-50k image datasets.
+      model_size: "s"        
+      # Specifies whether to train a class-conditional model.
+      conditional: True      
+      
+      # --- Regularization ---
+      # 10% Dropout: Prevents memorization on small datasets & enables CFG (Classifier Free Guidance).
+      dropout: 0.10          
+      
+      # --- Performance ---
+      # Enable automatic mixed-precision (FP16) training for speed on Tensor Cores.
+      fp16: True

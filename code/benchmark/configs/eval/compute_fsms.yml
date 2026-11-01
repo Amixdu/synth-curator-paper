@@ -1,0 +1,20 @@
+scratch_dir: "/path/to/scratch"
+
+real_train_features: "${scratch_dir}/features/real_train_features.pt"
+synth_pool_features: "${scratch_dir}/features/synthetic_pool_features.pt"
+
+curated_dirs:
+  shared:
+    random_synth:        "${scratch_dir}/benchmark/random_synth"
+    random_synth_n20000: "${scratch_dir}/benchmark/random_synth_n20000"
+    best_metric:          "${scratch_dir}/benchmark/best_metric"
+
+  per_arch:
+    algorithm:
+      resnet50: "${scratch_dir}/benchmark/algorithm/resnet50"
+      swin_b:   "${scratch_dir}/benchmark/algorithm/swin_b"
+    algorithm_n20000:
+      resnet50: "${scratch_dir}/benchmark/algorithm_n20000/resnet50"
+      swin_b:   "${scratch_dir}/benchmark/algorithm_n20000/swin_b"
+
+output_fsms: "${scratch_dir}/benchmark/fsms_lookup.csv"

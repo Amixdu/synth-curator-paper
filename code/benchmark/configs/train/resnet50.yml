@@ -1,0 +1,20 @@
+project:
+  code_dir:    "/path/to/code"
+  scratch_dir: "/path/to/scratch"
+
+training:
+  arch:              resnet50
+  num_classes:       7
+  batch_size:        32
+  num_epochs:        50
+  learning_rate:     0.001
+  early_stopping_patience: 10
+  num_workers:       4
+  seed:              42
+
+data:
+  real_train:  "${project.scratch_dir}/datasets/main/real/split/Real_Train"
+  real_val:    "${project.scratch_dir}/datasets/main/real/split/Real_Validation"
+
+output:
+  models_dir:  "${project.scratch_dir}/benchmark/models"

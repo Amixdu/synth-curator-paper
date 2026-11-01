@@ -1,0 +1,62 @@
+# ============================================================
+# Calibrate the memorisation threshold against ground truth.
+#
+# Sections 1-6 characterise FSMS against a NULL (real test images, which contain no
+# memorisation by construction). That establishes what "not a copy" looks like but says
+# nothing about where copies begin, so it cannot set an operating threshold: at any
+# null-derived cut the flagged count came out an order of magnitude below the false-flag
+# rate the null itself permits, i.e. consistent with zero memorisation.
+#
+# This step supplies the missing POSITIVE class. ISIC photographed many lesions more than
+# once - same physical lesion, different session, angle or lighting - and tags those
+# images with a shared `lesion_id`. Two images sharing one are the same physical thing:
+# exactly the relation a memorised generation would have to its training image. So the
+# same-lesion pairs give labelled positives and different-lesion pairs give labelled
+# negatives, on the identical statistic FSMS scores (DINOv2 cosine), in the identical
+# domain. The threshold then comes from a measured precision curve rather than an
+# assumption.
+#
+# Network is needed ONCE, for the lesion_id fetch (~160 batched requests, ~3 min). The
+# result is cached and every later run is offline.
+# ============================================================
+
+# Packed matrices from pack_features.py. Only real_train is needed - the calibration is entirely
+# real-vs-real; the synthetic pool enters only through the already-computed per-image
+# similarities below.
+packed_dir: "work/fsms/packed"
+real_train_features: "${packed_dir}/real_train_matrix.pt"
+
+# Per-image synthetic max-similarity from the pool-audit section of validate.py. Used only to report how many pool
+# images clear each candidate threshold; it is not part of the calibration itself.
+pool_per_image: "work/fsms/results/pool_per_image.csv"
+
+# Class labels for the per-class pool report. A global threshold protects classes
+# unequally - AKIEC's entire pool maximum sits below a threshold NV routinely clears - so
+# the per-class breakdown is what decides whether the filter stays class-conditional.
+pool_metadata: "../data/dataset_release/metadata.csv"
+
+# The lesion_id cache: the ISIC lesion identifiers of the real training images. It is an
+# input of the calibration, slow to regenerate and network-dependent, so keep it with the
+# repo to reproduce the calibration offline.
+lesion_id_cache: "../data/fsms_validation/lesion_ids.csv"
+
+isic_api: "https://api.isic-archive.com/api/v2/images/search/"
+batch_size: 50          # 50 ids per OR query; measured at ~1.2 s/batch with 0 misses
+request_timeout: 60
+retries: 3
+
+# Only pairs at or above this cosine are enumerated. The full 8012x8012 matrix is cheap,
+# but the interesting region is the top: below 0.90 the same-lesion rate is negligible
+# and the pair count explodes. Lower it only to extend the curve leftward.
+pair_floor: 0.90
+
+# Bands for the precision curve. Edges chosen to bracket where same-lesion precision
+# crosses the levels a claim might be made at. 0.92/0.94 added to resolve the steep
+# 0.90-0.95 zone for the safety threshold sweep - the 0.95-0.97 zone doesn't need
+# finer bands, it's already known flat.
+bands: [0.90, 0.92, 0.93, 0.94, 0.95, 0.965, 0.97, 0.98, 0.99, 1.01]
+
+# Candidate operating thresholds to report pool impact for.
+candidate_taus: [0.90, 0.92, 0.93, 0.94, 0.95, 0.96, 0.965, 0.97, 0.98, 0.99]
+
+output_dir: "work/fsms/results"

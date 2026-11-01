@@ -1,0 +1,45 @@
+# ===================================================================
+# EDM2 Evaluation Configuration
+# ===================================================================
+
+project_roots:
+  code_dir: "/path/to/code"
+  scratch_dir: "/path/to/scratch"
+
+scripts:
+  image_generation:
+    edm:
+      preprocessing:
+        calculate_metrics_script:
+          dir: "${project_roots.code_dir}/synthetic_pool/edm2"
+          file: "calculate_metrics.py"
+
+image_generation:
+  edm:
+    paths:
+      # INPUT: The RGB Zip created during preprocessing (Ground Truth for FID)
+      dataset_rgb_zip: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/processed_training_input/edm2_isic_rgb_512.zip"
+      
+      # INPUT: The folder containing your trained network-snapshots (.pkl)
+      output_dir: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/training_output"
+      
+      # OUTPUT: Where to save/load the calculated Reference Statistics
+      ref_stats_path: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/evaluation/edm2_isic_stats_512.pkl"
+      
+      # OUTPUT: Final CSV Report
+      metric_results_csv: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/evaluation/evaluation_results_fid50k.csv"
+
+    evaluation:
+      # Hardware Settings for the Evaluation Job
+      gpus: 3                # Number of GPUs used for the evaluation job
+      
+      # Metric Strategy
+      strategy: "all"        # "all" snapshots, or "last"
+      ema_filter: "*"    # Only evaluate the 'Best Quality' smoothed models
+      
+      # Metric Parameters
+      num_images: 50000      # The Gold Standard
+      batch_size: 128        # Inference batch size (can be higher than training)
+      
+      # Which metrics to run (comma separated)
+      metrics: "fid"

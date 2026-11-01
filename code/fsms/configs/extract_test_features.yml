@@ -1,0 +1,29 @@
+# ============================================================
+# Real TEST set: standardize to 512x512, then extract DINOv2 features.
+#
+# TWO scripts read this file, in order:
+#   1. utils/standardize_images.py            -> writes standardized_dir
+#   2. utils/feature_extraction/extract_dino_features.py -> writes output_features_pt
+#
+# WHY STANDARDIZE FIRST
+# The real training features were not extracted from the raw ISIC images. The images were
+# first center-cropped to the shorter side and Lanczos-resized to 512x512, the same
+# preparation the generator was trained on, so the metrics see the same pixels. The test
+# images need the same step. ISIC-2018 images are 600x450, and extracting from them
+# directly would give DINOv2 a different aspect ratio and a different field of view, which
+# shifts the feature distribution. The synthetic pool needs no such step, because EDM2
+# emits 512x512 images.
+#
+# PRE-FLIGHT: confirm the test images are present.
+#   ls /path/to/datasets/main/real/test/images | wc -l   # 1512
+# ============================================================
+datasets_dir: "/path/to/datasets/main"
+scratch_dir:  "/path/to/scratch"
+
+# Read by utils/standardize_images.py
+raw_image_dir:    "${datasets_dir}/real/test/images"
+standardized_dir: "${scratch_dir}/fsms/real_test_standardized_512"   # skipped if it already exists
+
+# Read by utils/feature_extraction/extract_dino_features.py
+feature_input_dir:  "${standardized_dir}"
+output_features_pt: "${scratch_dir}/fsms/assets/real_test_features.pt"

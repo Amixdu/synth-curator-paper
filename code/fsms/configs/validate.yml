@@ -1,0 +1,57 @@
+# ============================================================
+# Config of validate.py. All CPU-only, all run locally, all read-only
+# with respect to the source data.
+#
+# Feature paths point at the PACKED matrices from pack_features.py. The raw dicts also load
+# (fsms_core.load_features accepts either layout) but are slower and use more RAM.
+# ============================================================
+packed_dir: "work/fsms/packed"   # must match pack_features.yml
+
+real_train_features: "${packed_dir}/real_train_matrix.pt"
+real_test_features:  "${packed_dir}/real_test_matrix.pt"
+synth_pool_features: "${packed_dir}/synth_pool_matrix.pt"
+
+# Curated CSVs and published FSMS scores from the final experiment. Read-only -
+# nothing in this folder writes to the experiment outputs.
+experiment_data: "/path/to/benchmark_outputs"
+
+# Published FSMS scores, used to build the calibration table. Optional: if absent, the
+# anchor is reported on its own.
+fsms_lookup: "${experiment_data}/fsms_lookup.csv"
+
+# Base curated dataset for the planting experiment (detection section). Any curated CSV of 8,012
+# images works. The reported experiment used a curated set with FSMS 0.1318.
+detection_base_csv: "${experiment_data}/algorithm/swin_b/seed_0.csv"
+
+contamination_rates: [0.0, 0.01, 0.05, 0.10, 0.25]
+jitter_levels:       [0.05, 0.15, 0.30]
+
+# ---- The cohort comparison that carries the safety claim ----
+# Each entry is a directory of seed_*.csv curated manifests. FSMS and its tail
+# statistics are RECOMPUTED from these manifests rather than read from fsms_lookup.csv,
+# so the published numbers are independently verified rather than inherited.
+#
+# best_metric/{resnet50,swin_b} are byte-identical (arch-agnostic FID-Inception
+# curation) and random_synth is shared across both archs, so the Swin-B paths below
+# cover every distinct dataset.
+cohorts:
+  FID:          "${experiment_data}/best_metric/swin_b"
+  algorithm:    "${experiment_data}/algorithm/swin_b"
+  random:       "${experiment_data}/random_synth"
+
+# The headline comparison. Paired across seeds, two-sided.
+comparison:
+  primary:  algorithm
+  baseline: FID
+
+# Similarity thresholds for the tail statistics. Privacy risk is a tail property, so
+# these carry more weight than the mean - state them alongside FSMS.
+tail_thresholds: [0.95, 0.97, 0.99]
+
+# Used by the cross-modal section only. Per-image metric scores for the synthetic pool. Its SSIM/PSNR/LPIPS
+# columns were computed against each image's nearest real neighbour in DINOv2 space
+# - the same neighbour FSMS scores against - which is what makes the cross-modal
+# comparison valid.
+pool_metadata: "../data/dataset_release/metadata.csv"
+
+output_dir: "work/fsms/results"

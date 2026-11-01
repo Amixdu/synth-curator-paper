@@ -1,0 +1,11 @@
+scratch_dir: "/path/to/scratch"
+
+test_images_dir: "${scratch_dir}/datasets/main/real/test/images"
+test_labels_csv: "${scratch_dir}/datasets/main/real/test/ISIC2018_Task3_Test_GroundTruth.csv"
+
+models_dir:          "${scratch_dir}/benchmark/models"
+raw_predictions_dir: "${scratch_dir}/benchmark/raw_predictions"
+output_csv:          "${scratch_dir}/benchmark/final_results_raw.csv"
+
+batch_size:  64
+num_workers: 4

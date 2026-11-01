@@ -1,0 +1,5 @@
+scratch_dir: "/path/to/scratch"
+
+final_results_raw: "${scratch_dir}/benchmark/final_results_raw.csv"
+fsms_lookup:       "${scratch_dir}/benchmark/fsms_lookup.csv"
+output_csv:        "${scratch_dir}/benchmark/final_results.csv"

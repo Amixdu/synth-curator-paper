@@ -1,0 +1,46 @@
+# ===================================================================
+# EDM2 Generation Configuration
+# ===================================================================
+
+project_roots:
+  code_dir: "/path/to/code"
+  scratch_dir: "/path/to/scratch"
+
+image_generation:
+  edm:
+    generation_params:
+      settings:
+        num_classes: 7
+        # Exact image counts required per class (ISIC-2018 distribution + safety buffer)
+        # Class 0: AKIEC  | Class 1: BCC | Class 2: BKL | Class 3: DF
+        # Class 4: MEL    | Class 5: NV  | Class 6: VASC
+        class_distributions:
+          0: 1786
+          1: 1786
+          2: 1786
+          3: 1786
+          4: 1786
+          5: 6500
+          6: 1786
+        batch_size: 64
+        
+      # Path to your EDM2 training output folder
+      checkpoint_dir: "${project_roots.scratch_dir}/synthetic_pool/edm2/main/training_output"
+      
+      # Where to save the generated images
+      output_root_dir: "${project_roots.scratch_dir}/synthetic_pool/edm2"
+      
+      # The Grid: 4 Checkpoints x 4 CFG Scales = 16 Array Jobs
+      parameter_space:
+        checkpoints:
+          '3k':  'network-snapshot-0003041-0.050.pkl'
+          '8k':  'network-snapshot-0008110-0.050.pkl'
+          '15k': 'network-snapshot-0015206-0.050.pkl'
+          '25k': 'network-snapshot-0025344-0.050.pkl'
+        
+        # Classifier-Free Guidance (CFG) scales
+        cfg_scales: [1.0, 1.5, 2.0, 3.0]
+
+    scripts:
+      # Generation script (EDM2 generate_images.py with standard classifier-free guidance)
+      generation_script: "${project_roots.code_dir}/synthetic_pool/edm2/generate_images_cfg_patch.py"

@@ -1,0 +1,3 @@
+set,fsms,passed,mean_cosine,pct_ge_0.95,max
+real_train vs itself,0.0,True,,,
+real_train vs other real,0.09532064,,0.9046793580055237,9.960059910134799,1.000000238418579
